@@ -1,49 +1,45 @@
-function createPromise(position, delay) {
-      return new Promise((resolve, reject) => {
-        const shouldResolve = Math.random() > 0.3;
-        setTimeout(() => {
-          if (shouldResolve) {
-            resolve({ position, delay });
-          } else {
-            reject({ position, delay });
-          }
-        }, delay);
-      });
-    }
+import Notiflix from 'notiflix';
 
-    
-    function handleFormSubmit(event) {
-      event.preventDefault();
-      
-      const delayInput = document.querySelector('input[name="delay"]');
-      const stepInput = document.querySelector('input[name="step"]');
-      const amountInput = document.querySelector('input[name="amount"]');
-      const promisesContainer = document.querySelector('#promises-container');
-      
-      const initialDelay = parseInt(delayInput.value);
-      const step = parseInt(stepInput.value);
-      const amount = parseInt(amountInput.value);
+const form = document.querySelector('.form');
+const btn = document.querySelector('button');
 
-      promisesContainer.innerHTML = ''; 
-      
-      
-      for (let i = 0; i < amount; i++) {
-        const delay = initialDelay + i * step;
-        createPromise(i + 1, delay)
-          .then(({ position, delay }) => {
-            const message = `✅ Fulfilled promise ${position} in ${delay}ms`;
-            addMessageToContainer(promisesContainer, message);
-          })
-          .catch(({ position, delay }) => {
-            const message = `❌ Rejected promise ${position} in ${delay}ms`;
-            addMessageToContainer(promisesContainer, message);
-          });
+form.addEventListener('submit', onFormSubmit);
+
+function createPromise(position, initialDelay, step) {
+  const delay = initialDelay + step * (position - 1);
+  const shouldResolve = Math.random() > 0.3;
+
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      if (shouldResolve) {
+        resolve({ position, delay });
+      } else {
+        reject({ position, delay });
       }
-    }
+    }, delay);
+  });
+}
 
-    
-    function addMessageToContainer(container, message) {
-      const p = document.createElement('p');
-      p.textContent = message;
-      container.appendChild(p);
-    }
+function onFormSubmit(event) {
+  // btn.disabled = false;
+  event.preventDefault();
+  const delay = Number(event.currentTarget.delay.value);
+  const step = Number(event.currentTarget.step.value);
+  const amount = Number(event.currentTarget.amount.value);
+
+  for (let i = 1; i <= amount; i += 1) {
+    createPromise(i, delay, step)
+      .then(({ position, delay }) => {
+        Notiflix.Notify.success(
+          `✅ Fulfilled promise ${position} in ${delay}ms`
+        );
+      })
+      .catch(({ position, delay }) => {
+        Notiflix.Notify.failure(
+          `❌ Rejected promise ${position} in ${delay}ms`
+        );
+      });
+    // btn.disabled = true;
+  }
+  form.reset();
+}
